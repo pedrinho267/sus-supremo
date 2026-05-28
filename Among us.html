@@ -63,10 +63,11 @@ canvas {
 
 .joystick {
   position: fixed;
-  left: 40px;
-  bottom: 40px;
-  width: 160px;
-  height: 160px;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 260px;
+  height: 260px;
   background: rgba(255,255,255,0.1);
   border-radius: 50%;
   border: 2px solid rgba(255,255,255,0.2);
@@ -74,12 +75,12 @@ canvas {
 
 .stick {
   position: absolute;
-  width: 50px;
-  height: 50px;
+  width: 100px;
+  height: 100px;
   background: #fff;
   border-radius: 50%;
-  left: 35px;
-  top: 35px;
+  left: 80px;
+  top: 80px;
 }
 
 #message {
@@ -110,8 +111,8 @@ canvas {
     const ctx = canvas.getContext('2d');
 
     function resize() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
+      canvas.width = window.innerWidth * 0.8;
+      canvas.height = window.innerHeight * 0.8;
     }
 
     resize();
@@ -166,8 +167,8 @@ canvas {
       dragging = false;
       moveX = 0;
       moveY = 0;
-      stick.style.left = '35px';
-      stick.style.top = '35px';
+      stick.style.left = '80px';
+      stick.style.top = '80px';
     });
 
     window.addEventListener('touchmove', e => {
@@ -180,15 +181,15 @@ canvas {
       let y = touch.clientY - rect.top - 60;
 
       const dist = Math.sqrt(x*x + y*y);
-      const max = 35;
+      const max = 75;
 
       if (dist > max) {
         x = (x / dist) * max;
         y = (y / dist) * max;
       }
 
-      stick.style.left = `${x + 35}px`;
-      stick.style.top = `${y + 35}px`;
+      stick.style.left = `${x + 80}px`;
+      stick.style.top = `${y + 80}px`;
 
       moveX = x / max;
       moveY = y / max;
