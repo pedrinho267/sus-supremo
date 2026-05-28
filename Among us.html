@@ -140,10 +140,16 @@ canvas {
     }
 
     const walls = [
-      {x: 200, y: 150, w: 300, h: 40},
-      {x: 600, y: 250, w: 40, h: 250},
-      {x: 150, y: 500, w: 350, h: 40},
-      {x: 700, y: 100, w: 220, h: 40}
+      {x: 80, y: 60, w: 1000, h: 40},
+      {x: 80, y: 60, w: 40, h: 820},
+      {x: 1040, y: 60, w: 40, h: 820},
+      {x: 80, y: 840, w: 1000, h: 40},
+
+      {x: 260, y: 220, w: 120, h: 120},
+      {x: 700, y: 220, w: 120, h: 120},
+      {x: 480, y: 430, w: 120, h: 120},
+      {x: 260, y: 650, w: 120, h: 120},
+      {x: 700, y: 650, w: 120, h: 120}
     ];
 
     let moveX = 0;
@@ -246,12 +252,39 @@ canvas {
       ctx.save();
       ctx.translate(canvas.width / 2 - player.x, canvas.height / 2 - player.y);
 
-      ctx.fillStyle = '#374151';
-      ctx.fillRect(-2000, -2000, 4000, 4000);
+      ctx.fillStyle = '#c7c7be';
+      ctx.fillRect(0, 0, 1200, 1000);
+
+      for (let x = 0; x < 1200; x += 50) {
+        for (let y = 0; y < 1000; y += 50) {
+          ctx.fillStyle = (x + y) % 100 === 0 ? '#d4d4ca' : '#c7c7be';
+          ctx.fillRect(x, y, 50, 50);
+        }
+      }
 
       walls.forEach(wall => {
-        ctx.fillStyle = '#6b7280';
+        ctx.fillStyle = '#111827';
         ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+      });
+
+      const tables = [
+        {x: 260, y: 220},
+        {x: 700, y: 220},
+        {x: 480, y: 430},
+        {x: 260, y: 650},
+        {x: 700, y: 650}
+      ];
+
+      tables.forEach(table => {
+        ctx.fillStyle = '#2563eb';
+        ctx.beginPath();
+        ctx.arc(table.x + 60, table.y + 60, 55, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#1e3a8a';
+        ctx.beginPath();
+        ctx.arc(table.x + 60, table.y + 60, 35, 0, Math.PI * 2);
+        ctx.fill();
       });
 
       crew.forEach(bot => {
