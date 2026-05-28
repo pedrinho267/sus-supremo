@@ -1,0 +1,295 @@
+<!DOCTYPE html><html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Space Crew</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      touch-action: none;
+      font-family: Arial, sans-serif;
+    }body {
+  overflow: hidden;
+  background: #111827;
+  color: white;
+}
+
+canvas {
+  display: block;
+  background: #1f2937;
+}
+
+.ui {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 10;
+  background: rgba(0,0,0,0.5);
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.btn {
+  position: fixed;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: none;
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  opacity: 0.9;
+}
+
+#killBtn {
+  right: 20px;
+  bottom: 20px;
+  background: #dc2626;
+}
+
+#reportBtn {
+  right: 120px;
+  bottom: 20px;
+  background: #2563eb;
+}
+
+.joystick {
+  position: fixed;
+  left: 20px;
+  bottom: 20px;
+  width: 120px;
+  height: 120px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.2);
+}
+
+.stick {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background: #fff;
+  border-radius: 50%;
+  left: 35px;
+  top: 35px;
+}
+
+#message {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.8);
+  padding: 20px;
+  border-radius: 15px;
+  font-size: 28px;
+  display: none;
+  z-index: 20;
+}
+
+  </style>
+</head>
+<body>
+  <canvas id="game"></canvas>  <div class="ui">
+    <div>Missão: Elimine todos</div>
+    <div id="aliveText">Tripulantes vivos: 4</div>
+  </div>  <div class="joystick" id="joystick">
+    <div class="stick" id="stick"></div>
+  </div><button class="btn" id="killBtn">KILL</button> <button class="btn" id="reportBtn">MAPA</button>
+
+  <div id="message"></div>  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    resize();
+    window.addEventListener('resize', resize);
+
+    const player = {
+      x: 300,
+      y: 300,
+      size: 26,
+      color: '#ef4444',
+      speed: 3
+    };
+
+    const crew = [];
+
+    for (let i = 0; i < 4; i++) {
+      crew.push({
+        x: Math.random() * 1000 + 100,
+        y: Math.random() * 600 + 100,
+        size: 24,
+        color: ['#3b82f6','#22c55e','#facc15','#a855f7'][i],
+        alive: true,
+        dirX: Math.random() * 2 - 1,
+        dirY: Math.random() * 2 - 1
+      });
+    }
+
+    const walls = [
+      {x: 200, y: 150, w: 300, h: 40},
+      {x: 600, y: 250, w: 40, h: 250},
+      {x: 150, y: 500, w: 350, h: 40},
+      {x: 700, y: 100, w: 220, h: 40}
+    ];
+
+    let moveX = 0;
+    let moveY = 0;
+
+    const joystick = document.getElementById('joystick');
+    const stick = document.getElementById('stick');
+
+    let dragging = false;
+
+    joystick.addEventListener('touchstart', () => dragging = true);
+
+    window.addEventListener('touchend', () => {
+      dragging = false;
+      moveX = 0;
+      moveY = 0;
+      stick.style.left = '35px';
+      stick.style.top = '35px';
+    });
+
+    window.addEventListener('touchmove', e => {
+      if (!dragging) return;
+
+      const touch = e.touches[0];
+      const rect = joystick.getBoundingClientRect();
+
+      let x = touch.clientX - rect.left - 60;
+      let y = touch.clientY - rect.top - 60;
+
+      const dist = Math.sqrt(x*x + y*y);
+      const max = 35;
+
+      if (dist > max) {
+        x = (x / dist) * max;
+        y = (y / dist) * max;
+      }
+
+      stick.style.left = `${x + 35}px`;
+      stick.style.top = `${y + 35}px`;
+
+      moveX = x / max;
+      moveY = y / max;
+    });
+
+    function drawCharacter(char) {
+      ctx.fillStyle = char.color;
+      ctx.beginPath();
+      ctx.roundRect(char.x, char.y, char.size, char.size + 10, 10);
+      ctx.fill();
+
+      ctx.fillStyle = '#93c5fd';
+      ctx.fillRect(char.x + 5, char.y + 8, 16, 8);
+    }
+
+    function checkWallCollision(nx, ny) {
+      for (const wall of walls) {
+        if (
+          nx < wall.x + wall.w &&
+          nx + player.size > wall.x &&
+          ny < wall.y + wall.h &&
+          ny + player.size > wall.y
+        ) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function update() {
+      let nx = player.x + moveX * player.speed;
+      let ny = player.y + moveY * player.speed;
+
+      if (!checkWallCollision(nx, player.y)) {
+        player.x = nx;
+      }
+
+      if (!checkWallCollision(player.x, ny)) {
+        player.y = ny;
+      }
+
+      crew.forEach(bot => {
+        if (!bot.alive) return;
+
+        bot.x += bot.dirX * 1.2;
+        bot.y += bot.dirY * 1.2;
+
+        if (Math.random() < 0.01) {
+          bot.dirX = Math.random() * 2 - 1;
+          bot.dirY = Math.random() * 2 - 1;
+        }
+
+        if (bot.x < 0 || bot.x > 1200) bot.dirX *= -1;
+        if (bot.y < 0 || bot.y > 800) bot.dirY *= -1;
+      });
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.translate(canvas.width / 2 - player.x, canvas.height / 2 - player.y);
+
+      ctx.fillStyle = '#374151';
+      ctx.fillRect(-2000, -2000, 4000, 4000);
+
+      walls.forEach(wall => {
+        ctx.fillStyle = '#6b7280';
+        ctx.fillRect(wall.x, wall.y, wall.w, wall.h);
+      });
+
+      crew.forEach(bot => {
+        if (bot.alive) drawCharacter(bot);
+      });
+
+      drawCharacter(player);
+
+      ctx.restore();
+    }
+
+    function loop() {
+      update();
+      render();
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+
+    document.getElementById('killBtn').addEventListener('click', () => {
+      crew.forEach(bot => {
+        if (!bot.alive) return;
+
+        const dx = bot.x - player.x;
+        const dy = bot.y - player.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+
+        if (dist < 70) {
+          bot.alive = false;
+        }
+      });
+
+      const alive = crew.filter(c => c.alive).length;
+      document.getElementById('aliveText').innerText = `Tripulantes vivos: ${alive}`;
+
+      if (alive === 0) {
+        const msg = document.getElementById('message');
+        msg.style.display = 'block';
+        msg.innerText = 'VOCÊ VENCEU!';
+      }
+    });
+
+    document.getElementById('reportBtn').addEventListener('click', () => {
+      alert('Mapa simples da nave!');
+    });
+  </script></body>
+</html>
